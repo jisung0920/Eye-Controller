@@ -117,26 +117,6 @@ public class MainActivity extends AppCompatActivity{
     }
 
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case REQUEST_CAMERA:
-                for (int i = 0; i < permissions.length; i++) {
-                    String permission = permissions[i];
-                    int grantResult = grantResults[i];
-                    if (permission.equals(Manifest.permission.CAMERA)) {
-                        if(grantResult == PackageManager.PERMISSION_GRANTED) {
-
-                        } else {
-                            Toast.makeText(this,"Should have camera permission to run", Toast.LENGTH_LONG).show();
-                            finish();
-                        }
-                    }
-                }
-                break;
-        }
-    }
 
     private void initView(){
         webView = findViewById(R.id.webView);
@@ -144,7 +124,6 @@ public class MainActivity extends AppCompatActivity{
         fabMain = findViewById(R.id.fabMain);
         fabGaze = findViewById(R.id.fabGaze);
         fabSetting = findViewById(R.id.fabSetting);
-
         mOpenCvCameraView = findViewById(R.id.activity_surface_view);
 
     }
@@ -168,7 +147,7 @@ public class MainActivity extends AppCompatActivity{
         mOpenCvCameraView.setCameraIndex(1);
         mOpenCvCameraView.setCameraPermissionGranted();
         mOpenCvCameraView.disableView();
-
+        mOpenCvCameraView.setVisibility(View.INVISIBLE);
 
     }
 
@@ -294,6 +273,26 @@ public class MainActivity extends AppCompatActivity{
     }
 
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_CAMERA:
+                for (int i = 0; i < permissions.length; i++) {
+                    String permission = permissions[i];
+                    int grantResult = grantResults[i];
+                    if (permission.equals(Manifest.permission.CAMERA)) {
+                        if(grantResult == PackageManager.PERMISSION_GRANTED) {
+
+                        } else {
+                            Toast.makeText(this,"Should have camera permission to run", Toast.LENGTH_LONG).show();
+                            finish();
+                        }
+                    }
+                }
+                break;
+        }
+    }
 
 
 
