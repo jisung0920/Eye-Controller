@@ -8,30 +8,22 @@ args = parser.parse_args()
 
 cIP,cPORT = args.ip, int(args.port)
 cIP = '0.0.0.0'
+socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+print('IP Address ',cIP,':',cPORT)
 
+socket.bind((cIP,cPORT))
+
+
+print('Connected with ',cIP)
 
 try :
-	socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	print('IP Address ',cIP,':',cPORT)
 
-	socket.bind((cIP,cPORT))
-	socket.listen(1)
-	connect, addr = socket.accept()
-	print('Connected with ',addr)
 	
 	while True :
-
-		packet = connect.recv()
-		print(data.len())
-		data = packet.decode()
-		print('get')
+		data = socket.recv(5000)
+		print('get',data.decode())
 		# model data
 		# connect.sendall()
-
-		if data == 'END' :
-			connect.close()
-			print('Disconnected with',cIP)
-			break
 except :
 	print('Connecting Error')
 	pass

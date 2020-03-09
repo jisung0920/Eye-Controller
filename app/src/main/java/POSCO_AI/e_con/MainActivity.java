@@ -1,20 +1,16 @@
 package POSCO_AI.e_con;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 
 import android.view.animation.Animation;
@@ -29,27 +25,11 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Mat;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.List;
-
+import POSCO_AI.e_con.threadClass.CameraProcessor;
 import POSCO_AI.e_con.threadClass.CoordinateReceiverTask;
-
-import static android.Manifest.permission.CAMERA;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -76,6 +56,9 @@ public class MainActivity extends AppCompatActivity{
 
 
     CameraProcessor cameraProcessor;
+
+    String IP = "192.168.0.30";
+    int PORT = 9000;
 
 
     static {
@@ -140,12 +123,11 @@ public class MainActivity extends AppCompatActivity{
         fabViewAni();
 
 
-        cameraProcessor = new CameraProcessor();
-
-
+        cameraProcessor = new CameraProcessor(IP,PORT);
         mOpenCvCameraView.setCvCameraViewListener(cameraProcessor);
         mOpenCvCameraView.setCameraIndex(1);
         mOpenCvCameraView.setCameraPermissionGranted();
+        mOpenCvCameraView.setMaxFrameSize(900 ,600);
         mOpenCvCameraView.disableView();
         mOpenCvCameraView.setVisibility(View.INVISIBLE);
 
@@ -201,10 +183,13 @@ public class MainActivity extends AppCompatActivity{
 
                 fabGaze.setImageResource(R.drawable.touch_fb_icon);
 
+                cameraProcessor = new CameraProcessor(IP,PORT);
+                mOpenCvCameraView.setCvCameraViewListener(cameraProcessor);
                 mOpenCvCameraView.enableView();
                 mOpenCvCameraView.setVisibility(View.VISIBLE);
 
                 pointerVisible = !pointerVisible;
+                cameraProcessor.execute();
 
             }
         }
