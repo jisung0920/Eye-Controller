@@ -32,6 +32,16 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,6 +60,7 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     Animation fabOpen,fabClose;
 
     static int sPORT = 8000;
+    static int imgPORT = 9000;
 
     boolean pointerVisible ;
     boolean socketUsage;
@@ -63,6 +74,16 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     final static String TAG = "Open";
 
     private CameraBridgeViewBase mOpenCvCameraView;
+
+    String modelServerIP = "192.168.0.30";
+    InetAddress modelServerAddr;
+    Socket imageSocket;
+
+    DatagramPacket imgaePacket;
+    InputStream dataInputStream;
+    OutputStream dataOutputStream;
+
+    byte[] buffer;
 
     public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
 
@@ -97,6 +118,7 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
         initView();
         initVariables();
+        modelServerSetting();
         setWeb(webView);
 
 
@@ -139,7 +161,7 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
     }
 
-    private void initVariables(){
+    private void initVariables() {
 
         pointerVisible = false;
         socketUsage = true;
@@ -152,8 +174,24 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
 
 
+
+
+
     }
 
+    private void modelServerSetting(){
+        try {
+//            modelServerAddr = InetAddress.getByName();
+            imageSocket = new Socket(modelServerIP,imgPORT);
+            dataInputStream = imageSocket.getInputStream();
+            dataOutputStream = imageSocket.getOutputStream();
+        } catch (SocketException | UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
     private void setWeb(WebView webView){
         webView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -278,11 +316,29 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
+        if(buffer==null)
+            buffer = new byte[(int) (matInput.total() *
+                    matInput.elemSize())];
+/*
+        if ( matResult == null )
+            matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
+        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+
+        implement something
+        processing on the device
+
+ */
+
         matInput = inputFrame.rgba();
 
-//        if ( matResult == null )
-//            matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
-//        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+        try {
+
+            matInput.get(0, 0, buffer);
+            dataOutputStream.write(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         matResult =  matInput.t();
 
         Log.d("check","here");
