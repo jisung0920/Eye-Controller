@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 
@@ -28,6 +29,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
@@ -118,14 +120,17 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
         initView();
         initVariables();
-        modelServerSetting();
+//        modelServerSetting();
         setWeb(webView);
 
 
-        mOpenCvCameraView = (CameraBridgeViewBase)findViewById(R.id.activity_surface_view);
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+        mOpenCvCameraView = findViewById(R.id.activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.setCameraIndex(1);
+        mOpenCvCameraView.setCameraPermissionGranted();
+
+
+//        onCameraPermissionGranted();
 
 
     }
@@ -171,7 +176,6 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         fabClose = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fab_close);
 
         fabViewAni();
-
 
 
 
@@ -235,7 +239,6 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
                 fabGaze.setImageResource(R.drawable.touch_fb_icon);
 
-                onCameraPermissionGranted();
             }
         }
 
@@ -310,105 +313,15 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
     @Override
     public void onCameraViewStopped() {
-
     }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
-        if(buffer==null)
-            buffer = new byte[(int) (matInput.total() *
-                    matInput.elemSize())];
-/*
-        if ( matResult == null )
-            matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
-        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
-
-        implement something
-        processing on the device
-
- */
-
-        matInput = inputFrame.rgba();
-
-        try {
-
-            matInput.get(0, 0, buffer);
-            dataOutputStream.write(buffer);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        matResult =  matInput.t();
-
+        matResult =  inputFrame.rgba().t();
         Log.d("check","here");
         return matResult;
     }
-    protected List<? extends CameraBridgeViewBase> getCameraViewList() {
-        return Collections.singletonList(mOpenCvCameraView);
-    }
 
-    private static final int CAMERA_PERMISSION_REQUEST_CODE = 200;
-
-
-    protected void onCameraPermissionGranted() {
-        List<? extends CameraBridgeViewBase> cameraViews = getCameraViewList();
-        if (cameraViews == null) {
-            return;
-        }
-        for (CameraBridgeViewBase cameraBridgeViewBase: cameraViews) {
-            if (cameraBridgeViewBase != null) {
-                cameraBridgeViewBase.setCameraPermissionGranted();
-            }
-        }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        boolean havePermission = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
-                havePermission = false;
-            }
-        }
-        if (havePermission) {
-//            onCameraPermissionGranted();
-        }
-    }
-
-    @Override
-    @TargetApi(Build.VERSION_CODES.M)
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            onCameraPermissionGranted();
-        }else{
-            showDialogForPermission("앱을 실행하려면 퍼미션을 허가하셔야합니다.");
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-
-    @TargetApi(Build.VERSION_CODES.M)
-    private void showDialogForPermission(String msg) {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder( MainActivity.this);
-        builder.setTitle("알림");
-        builder.setMessage(msg);
-        builder.setCancelable(false);
-        builder.setPositiveButton("예", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id){
-                requestPermissions(new String[]{CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
-            }
-        });
-        builder.setNegativeButton("아니오", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface arg0, int arg1) {
-                finish();
-            }
-        });
-        builder.create().show();
-    }
 
 }
