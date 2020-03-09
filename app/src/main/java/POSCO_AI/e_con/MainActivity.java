@@ -51,10 +51,7 @@ import POSCO_AI.e_con.threadClass.CoordinateReceiverTask;
 
 import static android.Manifest.permission.CAMERA;
 
-public class MainActivity extends AppCompatActivity  implements CameraBridgeViewBase.CvCameraViewListener2 {
-
-    private Mat matInput;
-    private Mat matResult;
+public class MainActivity extends AppCompatActivity{
 
     WebView webView;
     ImageView gazePointer;
@@ -77,17 +74,8 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
-    String modelServerIP = "192.168.0.30";
-    InetAddress modelServerAddr;
-    Socket imageSocket;
 
-    DatagramPacket imgaePacket;
-    InputStream dataInputStream;
-    OutputStream dataOutputStream;
-
-    byte[] buffer;
-
-    public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
+    CameraProcessor cameraProcessor;
 
 
     static {
@@ -120,42 +108,35 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
         initView();
         initVariables();
-//        modelServerSetting();
         setWeb(webView);
 
 
-        mOpenCvCameraView = findViewById(R.id.activity_surface_view);
-        mOpenCvCameraView.setCvCameraViewListener(this);
-        mOpenCvCameraView.setCameraIndex(1);
-        mOpenCvCameraView.setCameraPermissionGranted();
 
-
-//        onCameraPermissionGranted();
 
 
     }
 
 
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        switch (requestCode) {
-//            case REQUEST_CAMERA:
-//                for (int i = 0; i < permissions.length; i++) {
-//                    String permission = permissions[i];
-//                    int grantResult = grantResults[i];
-//                    if (permission.equals(Manifest.permission.CAMERA)) {
-//                        if(grantResult == PackageManager.PERMISSION_GRANTED) {
-//
-//                        } else {
-//                            Toast.makeText(this,"Should have camera permission to run", Toast.LENGTH_LONG).show();
-//                            finish();
-//                        }
-//                    }
-//                }
-//                break;
-//        }
-//    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_CAMERA:
+                for (int i = 0; i < permissions.length; i++) {
+                    String permission = permissions[i];
+                    int grantResult = grantResults[i];
+                    if (permission.equals(Manifest.permission.CAMERA)) {
+                        if(grantResult == PackageManager.PERMISSION_GRANTED) {
+
+                        } else {
+                            Toast.makeText(this,"Should have camera permission to run", Toast.LENGTH_LONG).show();
+                            finish();
+                        }
+                    }
+                }
+                break;
+        }
+    }
 
     private void initView(){
         webView = findViewById(R.id.webView);
@@ -163,6 +144,8 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         fabMain = findViewById(R.id.fabMain);
         fabGaze = findViewById(R.id.fabGaze);
         fabSetting = findViewById(R.id.fabSetting);
+
+        mOpenCvCameraView = findViewById(R.id.activity_surface_view);
 
     }
 
@@ -178,24 +161,18 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         fabViewAni();
 
 
+        cameraProcessor = new CameraProcessor();
 
+
+        mOpenCvCameraView.setCvCameraViewListener(cameraProcessor);
+        mOpenCvCameraView.setCameraIndex(1);
+        mOpenCvCameraView.setCameraPermissionGranted();
+        mOpenCvCameraView.disableView();
 
 
     }
 
-    private void modelServerSetting(){
-        try {
-//            modelServerAddr = InetAddress.getByName();
-            imageSocket = new Socket(modelServerIP,imgPORT);
-            dataInputStream = imageSocket.getInputStream();
-            dataOutputStream = imageSocket.getOutputStream();
-        } catch (SocketException | UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-    }
     private void setWeb(WebView webView){
         webView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -223,9 +200,14 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
                 coordinateReceiverTask.onPostExecute(true);
                 Snackbar.make(v, "Gaze Tracking Deactivation", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                pointerVisible = !pointerVisible;
+
                 fabGaze.setImageResource(R.drawable.eye_fb_icon);
 
+
+                mOpenCvCameraView.disableView();
+                mOpenCvCameraView.setVisibility(View.INVISIBLE);
+
+                pointerVisible = !pointerVisible;
 
             }
 
@@ -233,11 +215,17 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
                 gazePointer.setVisibility(View.VISIBLE);
                 coordinateReceiverTask = new CoordinateReceiverTask(sPORT, gazePointer);
                 coordinateReceiverTask.execute();
+
                 Snackbar.make(v, "Gaze Tracking Activation", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                pointerVisible = !pointerVisible;
+
 
                 fabGaze.setImageResource(R.drawable.touch_fb_icon);
+
+                mOpenCvCameraView.enableView();
+                mOpenCvCameraView.setVisibility(View.VISIBLE);
+
+                pointerVisible = !pointerVisible;
 
             }
         }
@@ -306,22 +294,7 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     }
 
 
-    @Override
-    public void onCameraViewStarted(int width, int height) {
 
-    }
-
-    @Override
-    public void onCameraViewStopped() {
-    }
-
-    @Override
-    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-
-        matResult =  inputFrame.rgba().t();
-        Log.d("check","here");
-        return matResult;
-    }
 
 
 }
