@@ -19,24 +19,20 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
 
     private Mat matResult;
 
-    final String IP;
-    final int PORT;
-//    Socket socket;
-    DatagramSocket socket;
 
     DataInputStream inputStream;
     DataOutputStream outputStream;
 
 
 
-    public CameraProcessor(String IP, int PORT) {
-        this.IP = IP;
-        this.PORT = PORT;
+    public CameraProcessor() {
+
         matResult= new Mat();
 
 
 
     }
+
 
     @Override
     public void onCameraViewStarted(int width, int height) {
@@ -49,58 +45,34 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        inputFrame.rgba().t().copyTo(matResult);
+        Log.d("MATGET","get FRAME");
+        inputFrame.rgba().copyTo(matResult);
         return inputFrame.rgba();
     }
 
 
     @Override
     protected Boolean doInBackground(String... strings) {
-        byte[] datafile =null;
-        byte[] matBuffer;
+        String IP = strings[0];
+        int PORT = Integer.parseInt(strings[1]);
+        Log.d("SERVER",IP+":"+PORT);
+
+        Log.d("SERVER","data");
+        final int imgSize = (int) (matResult.total() * matResult.channels());
+        byte[] data = new byte[imgSize];
 
         try {
 
-            while (true) {
-                Thread.sleep(1000);
-                Log.d("MATGET", matResult.get(300, 300)[0] + "");
+            Log.d("SERVER","socket");
+            Socket socket = new Socket(IP,PORT);
+            Log.d("SERVER","STREAM");
+            DataOutputStream outStream = new DataOutputStream(socket.getOutputStream());
+            Log.d("SERVER","WRITE");
+            while(true){
+                Thread.sleep(500);
+                matResult.get(0,0,data);
+                outStream.write(data);
             }
-//            socket = new DatagramSocket(8500); // 소켓을 생성한다.
-//            DatagramPacket packet;
-//            byte[] buf;
-//            buf = new byte[20];
-//            packet = new DatagramPacket(buf, buf.length);
-//            socket.setSoTimeout(5000);
-//
-//            while (true) {
-//                socket.receive(packet);
-//                String msg = new String(packet.getData(), packet.getOffset(), packet.getLength());
-//                Log.d("UDP", msg+"-"+matResult.get(300,300));
-//
-//                publishProgress(msg);
-//            }
-
-
-
-//            socket = new Socket(IP, PORT);
-//            outputStream = new DataOutputStream(socket.getOutputStream());
-//            inputStream = new DataInputStream(socket.getInputStream());
-//            Log.d("SERVER","SOCKET");
-//            while(true){
-//                Log.d("SERVER","DATA");
-//                Mat matData = new Mat();
-//                matResult.copyTo(matData);
-//
-////                matBuffer = new byte[(int) (600*900*3)];
-////                matData.get(0, 0, matBuffer);
-//                byte[] tmp = "tmp".getBytes();
-//
-//                Log.d("SERVER","READY");
-//                outputStream.write(tmp);
-//                Log.d("SERVER","WRITE");
-//
-//                inputStream.read();
-//            }
 
         } catch (Exception e) {
             Log.e("SERVER", String.valueOf(e));

@@ -32,7 +32,7 @@ public class CoordinateReceiverTask extends AsyncTask<Integer, String, Boolean> 
             byte[] buf;
             buf = new byte[20];
             packet = new DatagramPacket(buf, buf.length);
-            socket.setSoTimeout(10000);
+
 
             while (true) {
                 socket.receive(packet);
@@ -72,9 +72,13 @@ public class CoordinateReceiverTask extends AsyncTask<Integer, String, Boolean> 
 
     @Override
     public void onPostExecute(Boolean aBoolean) {
-        socket.disconnect();
-        socket.close();
-
+        try {
+            socket.disconnect();
+            socket.close();
+        }
+        catch (Exception e) {
+            Log.d("UDP", "s: Error", e);
+        }
         super.onPostExecute(aBoolean);
     }
 }

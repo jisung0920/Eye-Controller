@@ -46,6 +46,7 @@
             android:layout_margin="@dimen/fab_margin"
             android:onClick="onClick"
             android:layout_gravity="center"
+
             app:fabSize="auto"
             app:srcCompat="@drawable/ip_fb_icon" />
         <com.google.android.material.floatingactionbutton.FloatingActionButton

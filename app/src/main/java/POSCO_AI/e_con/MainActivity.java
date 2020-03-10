@@ -1,6 +1,7 @@
 package POSCO_AI.e_con;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
@@ -8,11 +9,14 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
@@ -27,6 +31,8 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+
+import java.security.Permission;
 
 import POSCO_AI.e_con.threadClass.CameraProcessor;
 import POSCO_AI.e_con.threadClass.CoordinateReceiverTask;
@@ -57,8 +63,8 @@ public class MainActivity extends AppCompatActivity{
 
     CameraProcessor cameraProcessor;
 
-    String IP = "192.168.0.30";
-    int PORT = 9000;
+    String IP = "192.168.0.21";
+    int PORT = 8000;
 
 
     static {
@@ -88,17 +94,21 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        permissionValidation();
         initView();
         initVariables();
         setWeb(webView);
 
 
-
-
-
     }
 
+    public void permissionValidation(){
+        int permissionCheck  = ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA);
+        if(permissionCheck==PackageManager.PERMISSION_DENIED)
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},REQUEST_CAMERA);
+
+    }
 
 
     private void initView(){
@@ -123,11 +133,12 @@ public class MainActivity extends AppCompatActivity{
         fabViewAni();
 
 
-        cameraProcessor = new CameraProcessor(IP,PORT);
+
+        cameraProcessor = new CameraProcessor();
         mOpenCvCameraView.setCvCameraViewListener(cameraProcessor);
         mOpenCvCameraView.setCameraIndex(1);
         mOpenCvCameraView.setCameraPermissionGranted();
-        mOpenCvCameraView.setMaxFrameSize(900 ,600);
+        mOpenCvCameraView.setMaxFrameSize(600 ,900);
         mOpenCvCameraView.disableView();
         mOpenCvCameraView.setVisibility(View.INVISIBLE);
 
@@ -158,38 +169,35 @@ public class MainActivity extends AppCompatActivity{
 
             if(pointerVisible == true){
                 gazePointer.setVisibility(View.INVISIBLE);
-                coordinateReceiverTask.onPostExecute(true);
+//                coordinateReceiverTask.onPostExecute(true);
                 Snackbar.make(v, "Gaze Tracking Deactivation", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
 
-                fabGaze.setImageResource(R.drawable.eye_fb_icon);
-
-
                 mOpenCvCameraView.disableView();
-                mOpenCvCameraView.setVisibility(View.INVISIBLE);
+                mOpenCvCameraView.setVisibility(View.GONE);
+                cameraProcessor.onPostExecute(true);
 
+                fabGaze.setImageResource(R.drawable.eye_fb_icon);
                 pointerVisible = !pointerVisible;
 
             }
 
             else{
                 gazePointer.setVisibility(View.VISIBLE);
-                coordinateReceiverTask = new CoordinateReceiverTask(sPORT, gazePointer);
-                coordinateReceiverTask.execute();
+//                coordinateReceiverTask = new CoordinateReceiverTask(sPORT, gazePointer);
+//                coordinateReceiverTask.execute();
 
                 Snackbar.make(v, "Gaze Tracking Activation", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
 
 
-                fabGaze.setImageResource(R.drawable.touch_fb_icon);
-
-                cameraProcessor = new CameraProcessor(IP,PORT);
-                mOpenCvCameraView.setCvCameraViewListener(cameraProcessor);
                 mOpenCvCameraView.enableView();
                 mOpenCvCameraView.setVisibility(View.VISIBLE);
+                cameraProcessor.execute(IP,PORT+"");
 
+                fabGaze.setImageResource(R.drawable.touch_fb_icon);
                 pointerVisible = !pointerVisible;
-                cameraProcessor.execute();
+
 
             }
         }

@@ -7,7 +7,7 @@ parser.add_argument('--port',required =False, default='8000', help = 'device\'s 
 args = parser.parse_args()
 
 cIP,cPORT = args.ip, int(args.port)
-cIP = '0.0.0.0'
+# cIP = '0.0.0.0'
 socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 print('IP Address ',cIP,':',cPORT)
 
