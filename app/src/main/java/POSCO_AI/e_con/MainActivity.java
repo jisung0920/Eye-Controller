@@ -39,55 +39,34 @@ import POSCO_AI.e_con.threadClass.CoordinateReceiverTask;
 
 public class MainActivity extends AppCompatActivity{
 
-    WebView webView;
-    ImageView gazePointer;
-    FloatingActionButton fabMain,fabGaze,fabSetting;
-    Animation fabOpen,fabClose;
-
-    static int sPORT = 8000;
-    static int imgPORT = 9000;
-
-    boolean pointerVisible ;
-    boolean socketUsage;
-    boolean fabState;
-
-    CoordinateReceiverTask coordinateReceiverTask;
+    private final String startUrl = "https://www.autodraw.com/";
     private static final int REQUEST_CAMERA = 1;
 
-    final String startUrl = "https://www.autodraw.com/";
+    String serverIP = "192.168.0.17";
+    int serverPORT = 9000;
+    int PORT = 8500;
 
-    final static String TAG = "Open";
-
+    private WebView webView;
+    private ImageView gazePointer;
+    private FloatingActionButton fabMain,fabGaze,fabSetting;
     private CameraBridgeViewBase mOpenCvCameraView;
 
+    private Animation fabOpen,fabClose;
 
-    CameraProcessor cameraProcessor;
+    private boolean pointerVisible ;
+    private boolean socketUsage;
+    private boolean fabState;
 
-    String IP = "192.168.0.21";
-    int PORT = 8000;
+    private CameraProcessor cameraProcessor;
+    private CoordinateReceiverTask coordinateReceiverTask;
 
 
+    /*
     static {
         System.loadLibrary("opencv_java4");
         System.loadLibrary("native-lib");
     }
-
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    mOpenCvCameraView.enableView();
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
-            }
-        }
-    };
-
+     */
 
 
     @Override
@@ -96,8 +75,10 @@ public class MainActivity extends AppCompatActivity{
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         permissionValidation();
+
         initView();
         initVariables();
+        cameraViewInit();
         setWeb(webView);
 
 
@@ -107,9 +88,7 @@ public class MainActivity extends AppCompatActivity{
         int permissionCheck  = ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA);
         if(permissionCheck==PackageManager.PERMISSION_DENIED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},REQUEST_CAMERA);
-
     }
-
 
     private void initView(){
         webView = findViewById(R.id.webView);
@@ -118,7 +97,6 @@ public class MainActivity extends AppCompatActivity{
         fabGaze = findViewById(R.id.fabGaze);
         fabSetting = findViewById(R.id.fabSetting);
         mOpenCvCameraView = findViewById(R.id.activity_surface_view);
-
     }
 
     private void initVariables() {
@@ -132,16 +110,17 @@ public class MainActivity extends AppCompatActivity{
 
         fabViewAni();
 
+        cameraProcessor = new CameraProcessor(gazePointer);
 
+    }
 
-        cameraProcessor = new CameraProcessor();
+    private void cameraViewInit(){
         mOpenCvCameraView.setCvCameraViewListener(cameraProcessor);
         mOpenCvCameraView.setCameraIndex(1);
         mOpenCvCameraView.setCameraPermissionGranted();
-        mOpenCvCameraView.setMaxFrameSize(600 ,900);
+//        mOpenCvCameraView.setMaxFrameSize(resolutionWidth ,resolutionHeight);
         mOpenCvCameraView.disableView();
         mOpenCvCameraView.setVisibility(View.INVISIBLE);
-
     }
 
 
@@ -193,7 +172,7 @@ public class MainActivity extends AppCompatActivity{
 
                 mOpenCvCameraView.enableView();
                 mOpenCvCameraView.setVisibility(View.VISIBLE);
-                cameraProcessor.execute(IP,PORT+"");
+//                cameraProcessor.execute(IP,PORT+"");
 
                 fabGaze.setImageResource(R.drawable.touch_fb_icon);
                 pointerVisible = !pointerVisible;
@@ -204,7 +183,7 @@ public class MainActivity extends AppCompatActivity{
 
         else if (v.getId()==R.id.fabSetting){
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("IP Address").setMessage(EconUtils.getLocalIpAddress()+":"+sPORT).setPositiveButton("확인", new DialogInterface.OnClickListener(){
+            builder.setTitle("IP Address").setMessage(EconUtils.getLocalIpAddress()+":"+PORT).setPositiveButton("확인", new DialogInterface.OnClickListener(){
                 public void onClick(DialogInterface dialog, int whichButton){
                     dialog.cancel();
                 }
@@ -238,6 +217,22 @@ public class MainActivity extends AppCompatActivity{
 
 
 
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                {
+                    mOpenCvCameraView.enableView();
+                } break;
+                default:
+                {
+                    super.onManagerConnected(status);
+                } break;
+            }
+        }
+    };
+
     @Override
     public void onPause()
     {
@@ -251,10 +246,8 @@ public class MainActivity extends AppCompatActivity{
     {
         super.onResume();
         if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "onResume :: Internal OpenCV library not found.");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, mLoaderCallback);
         } else {
-            Log.d(TAG, "onResum :: OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
     }
