@@ -1,7 +1,6 @@
 package POSCO_AI.e_con;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
@@ -12,14 +11,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -32,19 +33,15 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
-import java.security.Permission;
-
 import POSCO_AI.e_con.threadClass.CameraProcessor;
-import POSCO_AI.e_con.threadClass.CoordinateReceiverTask;
 
 public class MainActivity extends AppCompatActivity{
 
-    private final String startUrl = "https://www.autodraw.com/";
+    private final String startUrl = "https://www.youtube.com/";
     private static final int REQUEST_CAMERA = 1;
 
-    String serverIP = "192.168.0.17";
-    int serverPORT = 9000;
-    int PORT = 8500;
+    String serverIP = "192.168.43.89";
+    int serverPORT = 8400;
 
     private WebView webView;
     private ImageView gazePointer;
@@ -58,15 +55,14 @@ public class MainActivity extends AppCompatActivity{
     private boolean fabState;
 
     private CameraProcessor cameraProcessor;
-    private CoordinateReceiverTask coordinateReceiverTask;
 
 
-    /*
+
     static {
         System.loadLibrary("opencv_java4");
         System.loadLibrary("native-lib");
     }
-     */
+
 
 
     @Override
@@ -110,7 +106,7 @@ public class MainActivity extends AppCompatActivity{
 
         fabViewAni();
 
-        cameraProcessor = new CameraProcessor(gazePointer);
+        cameraProcessor = new CameraProcessor(gazePointer,serverIP,serverPORT);
 
     }
 
@@ -125,6 +121,8 @@ public class MainActivity extends AppCompatActivity{
 
 
     private void setWeb(WebView webView){
+        webView.setWebViewClient(new WebViewClient());
+        webView.setWebChromeClient(new WebChromeClient());
         webView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -148,7 +146,6 @@ public class MainActivity extends AppCompatActivity{
 
             if(pointerVisible == true){
                 gazePointer.setVisibility(View.INVISIBLE);
-//                coordinateReceiverTask.onPostExecute(true);
                 Snackbar.make(v, "Gaze Tracking Deactivation", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
 
@@ -163,8 +160,6 @@ public class MainActivity extends AppCompatActivity{
 
             else{
                 gazePointer.setVisibility(View.VISIBLE);
-//                coordinateReceiverTask = new CoordinateReceiverTask(sPORT, gazePointer);
-//                coordinateReceiverTask.execute();
 
                 Snackbar.make(v, "Gaze Tracking Activation", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
@@ -183,8 +178,12 @@ public class MainActivity extends AppCompatActivity{
 
         else if (v.getId()==R.id.fabSetting){
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("IP Address").setMessage(EconUtils.getLocalIpAddress()+":"+PORT).setPositiveButton("확인", new DialogInterface.OnClickListener(){
+            final EditText portEdit = new EditText(this);
+            portEdit.setText(""+serverPORT);
+            builder.setTitle("IP Address").setMessage(EconUtils.getLocalIpAddress()).setView(portEdit).setPositiveButton("확인", new DialogInterface.OnClickListener(){
                 public void onClick(DialogInterface dialog, int whichButton){
+                    serverPORT =Integer.parseInt( portEdit.getText().toString());
+
                     dialog.cancel();
                 }
             }).show();
