@@ -73,9 +73,9 @@ public class MainActivity extends AppCompatActivity{
         permissionValidation();
 
         initView();
+        setWeb(webView);
         initVariables();
         cameraViewInit();
-        setWeb(webView);
 
 
     }
@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity{
 
         fabViewAni();
 
-        cameraProcessor = new CameraProcessor(gazePointer,serverIP,serverPORT);
+        cameraProcessor = new CameraProcessor(gazePointer,serverIP,serverPORT,webView);
 
     }
 
@@ -114,7 +114,6 @@ public class MainActivity extends AppCompatActivity{
         mOpenCvCameraView.setCvCameraViewListener(cameraProcessor);
         mOpenCvCameraView.setCameraIndex(1);
         mOpenCvCameraView.setCameraPermissionGranted();
-//        mOpenCvCameraView.setMaxFrameSize(resolutionWidth ,resolutionHeight);
         mOpenCvCameraView.disableView();
         mOpenCvCameraView.setVisibility(View.INVISIBLE);
     }
@@ -178,12 +177,18 @@ public class MainActivity extends AppCompatActivity{
 
         else if (v.getId()==R.id.fabSetting){
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            final EditText ipEdit = new EditText(this);
             final EditText portEdit = new EditText(this);
+            ipEdit.setText(serverIP);
             portEdit.setText(""+serverPORT);
-            builder.setTitle("IP Address").setMessage(EconUtils.getLocalIpAddress()).setView(portEdit).setPositiveButton("확인", new DialogInterface.OnClickListener(){
+            builder.setTitle("IP Address").setView(ipEdit).setView(portEdit).setPositiveButton("확인", new DialogInterface.OnClickListener(){
                 public void onClick(DialogInterface dialog, int whichButton){
+
+                    serverIP = ipEdit.getText().toString();
                     serverPORT =Integer.parseInt( portEdit.getText().toString());
 
+                    cameraProcessor.setServerIP(serverIP);
+                    cameraProcessor.setServerPORT(serverPORT);
                     dialog.cancel();
                 }
             }).show();

@@ -3,7 +3,9 @@ package POSCO_AI.e_con.threadClass;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.WebView;
 
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.Utils;
@@ -21,6 +23,9 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Arrays;
 
+import POSCO_AI.e_con.EconUtils;
+
+
 public class CameraProcessor extends AsyncTask<String, String, Boolean> implements CameraBridgeViewBase.CvCameraViewListener2 {
     private static final String TAG = "CameraProcessor";
 
@@ -31,22 +36,40 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
     private View gazePointer;
     private Socket socket;
     private String serverIP;
-    private int cameraPORT;
+    private int serverPORT;
+    private WebView webView;
+    private int blinkCounter = 0;
+    private final int BLINK_TH = 3;
 
-    public CameraProcessor(View gazePointer,String IP,int PORT) {
+
+    public CameraProcessor(View gazePointer,String IP,int PORT, WebView webView) {
 
         matResult = new Mat();
         previewVisible = false;
         this.gazePointer = gazePointer;
         this.serverIP = IP;
-        this.cameraPORT = PORT;
+        this.serverPORT = PORT;
+        this.webView = webView;
 
 
+    }
+
+    public void setServerIP(String serverIP) {
+        this.serverIP = serverIP;
+    }
+
+    public void setServerPORT(int serverPORT) {
+        this.serverPORT = serverPORT;
     }
 
     public void setPreviewVisible(Boolean previewVisible) {
         this.previewVisible = previewVisible;
     }
+
+    public void setGazePointer(View gazePointer) {
+        this.gazePointer = gazePointer;
+    }
+
 
     @Override
     public void onCameraViewStarted(int width, int height) {
@@ -54,9 +77,9 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
             @Override
             public void run() {
                 try {
-                    Log.d(TAG, "onImageAvailable: 소켓 연결 대기중 IP: " + serverIP + " PORT: " + cameraPORT);
-                    socket = new Socket(serverIP, cameraPORT);
-                    Log.d(TAG, "onImageAvailable: 소켓 연결 성공 IP: " + serverIP + " PORT: " + cameraPORT);
+                    Log.d(TAG, "onImageAvailable: 소켓 연결 대기중 IP: " + serverIP + " PORT: " + serverPORT);
+                    socket = new Socket(serverIP, serverPORT);
+                    Log.d(TAG, "onImageAvailable: 소켓 연결 성공 IP: " + serverIP + " PORT: " + serverPORT);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -167,10 +190,15 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
         click = Integer.parseInt(coordinates[2]);
         gazePointer.setX(x);
         gazePointer.setY(y);
+        if(click==1)
+            blinkCounter++;
+        else
+            blinkCounter=0;
 
-        if(click==1){
-//                EconUtils.gazeTouchMotion(webView,x,y, MotionEvent.ACTION_DOWN);
-//                EconUtils.gazeTouchMotion(webView,x,y,MotionEvent.ACTION_UP);
+        if(blinkCounter==BLINK_TH){
+                EconUtils.gazeTouchMotion(webView,x,y, MotionEvent.ACTION_DOWN);
+                EconUtils.gazeTouchMotion(webView,x,y,MotionEvent.ACTION_UP);
+                blinkCounter=0;
         }
         super.onProgressUpdate(values);
     }
