@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -22,6 +24,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 
@@ -38,13 +41,15 @@ import POSCO_AI.e_con.threadClass.CameraProcessor;
 public class MainActivity extends AppCompatActivity{
 
     private final String startUrl = "https://www.youtube.com/";
+//    private final String startUrl = "https://music.youtube.com/";
+//    private final String startUrl = "https://m.map.naver.com/";
     private static final int REQUEST_CAMERA = 1;
 
-    String serverIP = "192.168.43.89";
-    int serverPORT = 8400;
+    String serverIP = "192.168.24.133";
+    int serverPORT = 8100;
 
     private WebView webView;
-    private ImageView gazePointer;
+    private ImageView gazePointer,emotionView;
     private FloatingActionButton fabMain,fabGaze,fabSetting;
     private CameraBridgeViewBase mOpenCvCameraView;
 
@@ -53,6 +58,8 @@ public class MainActivity extends AppCompatActivity{
     private boolean pointerVisible ;
     private boolean socketUsage;
     private boolean fabState;
+
+    private int WIDTH,HEIGHT;
 
     private CameraProcessor cameraProcessor;
 
@@ -72,6 +79,10 @@ public class MainActivity extends AppCompatActivity{
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         permissionValidation();
 
+        DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();
+        WIDTH = dm.widthPixels;
+        HEIGHT = dm.heightPixels;
+
         initView();
         setWeb(webView);
         initVariables();
@@ -89,6 +100,7 @@ public class MainActivity extends AppCompatActivity{
     private void initView(){
         webView = findViewById(R.id.webView);
         gazePointer = findViewById(R.id.gazePointer);
+        emotionView = findViewById(R.id.emotionIcon);
         fabMain = findViewById(R.id.fabMain);
         fabGaze = findViewById(R.id.fabGaze);
         fabSetting = findViewById(R.id.fabSetting);
@@ -106,7 +118,7 @@ public class MainActivity extends AppCompatActivity{
 
         fabViewAni();
 
-        cameraProcessor = new CameraProcessor(gazePointer,serverIP,serverPORT,webView);
+        cameraProcessor = new CameraProcessor(gazePointer,serverIP,serverPORT,webView,emotionView,WIDTH,HEIGHT);
 
     }
 
@@ -177,11 +189,17 @@ public class MainActivity extends AppCompatActivity{
 
         else if (v.getId()==R.id.fabSetting){
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+            LinearLayout layout = new LinearLayout(this);
+            layout.setOrientation(LinearLayout.VERTICAL);
+
             final EditText ipEdit = new EditText(this);
             final EditText portEdit = new EditText(this);
             ipEdit.setText(serverIP);
             portEdit.setText(""+serverPORT);
-            builder.setTitle("IP Address").setView(ipEdit).setView(portEdit).setPositiveButton("확인", new DialogInterface.OnClickListener(){
+            layout.addView(ipEdit);
+            layout.addView(portEdit);
+            builder.setTitle("IP Address Setting").setView(layout).setPositiveButton("확인", new DialogInterface.OnClickListener(){
                 public void onClick(DialogInterface dialog, int whichButton){
 
                     serverIP = ipEdit.getText().toString();

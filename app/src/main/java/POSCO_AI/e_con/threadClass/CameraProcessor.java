@@ -1,11 +1,13 @@
 package POSCO_AI.e_con.threadClass;
 
+import android.animation.ObjectAnimator;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebView;
+import android.widget.ImageView;
 
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.Utils;
@@ -24,6 +26,7 @@ import java.net.Socket;
 import java.util.Arrays;
 
 import POSCO_AI.e_con.EconUtils;
+import POSCO_AI.e_con.R;
 
 
 public class CameraProcessor extends AsyncTask<String, String, Boolean> implements CameraBridgeViewBase.CvCameraViewListener2 {
@@ -32,17 +35,20 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
 
     private Mat matResult;
     private Boolean previewVisible;
-    protected int x, y ,click;
+    protected int x, y ,click,scroll;
+    private int upTo,bottomTo;
     private View gazePointer;
     private Socket socket;
     private String serverIP;
     private int serverPORT;
     private WebView webView;
-    private int blinkCounter = 0;
-    private final int BLINK_TH = 3;
+    private ImageView emotionView;
+    private int W,H;
+    private int blinkCounter = 0,scrollCounter=0;
+    private final int BLINK_TH = 5,SCROLL_TH=3;
 
 
-    public CameraProcessor(View gazePointer,String IP,int PORT, WebView webView) {
+    public CameraProcessor(View gazePointer,String IP,int PORT, WebView webView,ImageView emotionView,int W, int H) {
 
         matResult = new Mat();
         previewVisible = false;
@@ -50,7 +56,9 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
         this.serverIP = IP;
         this.serverPORT = PORT;
         this.webView = webView;
-
+        this.emotionView = emotionView;
+        this.W = W;
+        this.H = H;
 
     }
 
@@ -110,37 +118,30 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
             // 비트맵 생성
             Bitmap bitmap = Bitmap.createBitmap(matResult.width() , matResult.height(), Bitmap.Config.ARGB_8888);
             Log.d(TAG, "onCameraFrame: width: " + matResult.width() + "height: " + matResult.height());
-            // mat 객체를 비트맵으로 변환
             Utils.matToBitmap(matResult, bitmap);
-            // 이미지를 ByteArray로 바꾸기 위한 ByteArrayOutputStream
             ByteArrayOutputStream ba = new ByteArrayOutputStream();
-            // 비트맵 이미지를 전달할 OutputStream
             OutputStream os = null;
             InputStream is =null;
+
             if (socket != null) {
-//                Log.d(TAG, "onCameraFrame: 소켓: " + socket);
                 os = socket.getOutputStream();
                 is = socket.getInputStream();
-            } else {
-//                Log.d(TAG, "onCameraFrame: 소켓: " + socket);
             }
-            // 비트맵을 압축하고 ByteArrayOutputStream에 넣음
+
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, ba);
-            // ByteArrayOutputStream을 바이트 배열로 바꾸고 배열의 길이 구함
+
             byte[] bytes = ba.toByteArray();
-            // 바이트 배열의 길이 구함
+
             int len = bytes.length;
-//            Log.d(TAG, "onCameraFrame: 이미지의 바이트 길이: " + len);
-            // 서버에 이미지 바이트의 길이를 제대로 전달하기 위해 숫자를 10자리 문자열로 바꾸고 전달 (숫자가 없는 부분은 공백으로 채움)
             StringBuilder stLen = new StringBuilder(String.valueOf(len));
-//            Log.d(TAG, "onCameraFrame: stLen.length(): " + stLen.length());
+
             int wantDigit = 10;
             int currentDigit = stLen.length();
-            // 10자리를 맞추기 위해 나머지 부분은 공백으로 채움
+
             for (int i = 0; i < wantDigit - currentDigit; i++) {
                 stLen.append(' ');
             }
-//            Log.d(TAG, "onCameraFrame: stLen: " + stLen);
+
             byte[] stLenBytes = stLen.toString().getBytes();
             // 바이트 배열의 길이를 스트림에서 출력하여 서버에 전송
             os.write(stLenBytes);
@@ -185,9 +186,12 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
     @Override
     public void onProgressUpdate(String... values) {
         String[] coordinates = values[0].split("/");
+        int emotionNum=0;
         x = Integer.parseInt(coordinates[0]);
         y = Integer.parseInt(coordinates[1]);
         click = Integer.parseInt(coordinates[2]);
+        scroll = Integer.parseInt((coordinates[3]));
+        emotionNum = Integer.parseInt((coordinates[4]));
         gazePointer.setX(x);
         gazePointer.setY(y);
         if(click==1)
@@ -196,10 +200,52 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
             blinkCounter=0;
 
         if(blinkCounter==BLINK_TH){
-                EconUtils.gazeTouchMotion(webView,x,y, MotionEvent.ACTION_DOWN);
-                EconUtils.gazeTouchMotion(webView,x,y,MotionEvent.ACTION_UP);
-                blinkCounter=0;
+            EconUtils.gazeTouchMotion(webView,x,y, MotionEvent.ACTION_DOWN);
+            EconUtils.gazeTouchMotion(webView,x,y,MotionEvent.ACTION_UP);
+            blinkCounter=0;
         }
+        if(scroll==1)
+            scrollCounter++;
+        else
+            scrollCounter=0;
+
+        if(scrollCounter>SCROLL_TH){
+            if(scroll==1) {
+                if (y<H*(0.3)) {
+                    if (webView.getScrollY() > 850) {
+                        upTo = webView.getScrollY() - 850;
+                    } else {
+                        upTo = 0;
+                    }
+
+                    ObjectAnimator anim = ObjectAnimator.ofInt(webView, "scrollY", webView.getScrollY(), upTo);
+                    anim.setDuration(1000).start();
+                }
+                if (y>H*(0.8)) {
+
+                    bottomTo = webView.getScrollY() + 850;
+                    ObjectAnimator anim = ObjectAnimator.ofInt(webView, "scrollY", webView.getScrollY(), bottomTo);
+                    anim.setDuration(1000).start();
+                }
+            }
+        }
+
+        if(emotionNum == 1)
+            emotionView.setImageResource(R.drawable.happy);
+        else if(emotionNum == 2)
+            emotionView.setImageResource(R.drawable.surprise);
+        else if(emotionNum == 3)
+            emotionView.setImageResource(R.drawable.sad);
+        else if(emotionNum == 4)
+            emotionView.setImageResource(R.drawable.anger);
+        else if(emotionNum == 5)
+            emotionView.setImageResource(R.drawable.disgust);
+        else if(emotionNum == 6)
+            emotionView.setImageResource(R.drawable.fear);
+        else
+            emotionView.setImageResource(R.drawable.neutral);
+
+
         super.onProgressUpdate(values);
     }
 
