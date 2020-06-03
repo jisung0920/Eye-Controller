@@ -109,6 +109,7 @@ public class MainActivity extends AppCompatActivity{
 
     private void initVariables() {
 
+        serverIP  = EconUtils.getLocalIpAddress();
         pointerVisible = false;
         socketUsage = true;
         fabState =true;
@@ -134,15 +135,15 @@ public class MainActivity extends AppCompatActivity{
     private void setWeb(WebView webView){
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
-        webView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                float tmpx = event.getX();
-                float tmpy = event.getY();
-                Toast.makeText(MainActivity.this, "Coordi :"+ tmpx+"/"+tmpy, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        });
+//        webView.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                float tmpx = event.getX();
+//                float tmpy = event.getY();
+//                Toast.makeText(MainActivity.this, "Coordi :"+ tmpx+"/"+tmpy, Toast.LENGTH_SHORT).show();
+//                return false;
+//            }
+//        });
         webView.getSettings().setJavaScriptEnabled(true);
         webView.loadUrl(startUrl);
     }

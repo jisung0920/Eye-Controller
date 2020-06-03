@@ -31,7 +31,7 @@ public class EconUtils {
     public static void gazeTouchMotion(View view, float x, float y, int action){
         MotionEvent motionEvent = MotionEvent.obtain(
                 SystemClock.uptimeMillis(),
-                SystemClock.uptimeMillis()+500,
+                SystemClock.uptimeMillis()+10,
                 action,
                 x,
                 y,

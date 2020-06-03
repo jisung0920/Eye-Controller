@@ -45,7 +45,7 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
     private ImageView emotionView;
     private int W,H;
     private int blinkCounter = 0,scrollCounter=0;
-    private final int BLINK_TH = 5,SCROLL_TH=3;
+    private final int BLINK_TH = 3,SCROLL_TH=3;
 
 
     public CameraProcessor(View gazePointer,String IP,int PORT, WebView webView,ImageView emotionView,int W, int H) {
@@ -203,6 +203,7 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
             EconUtils.gazeTouchMotion(webView,x,y, MotionEvent.ACTION_DOWN);
             EconUtils.gazeTouchMotion(webView,x,y,MotionEvent.ACTION_UP);
             blinkCounter=0;
+            emotionNum = 0;
         }
         if(scroll==1)
             scrollCounter++;
@@ -220,24 +221,32 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
 
                     ObjectAnimator anim = ObjectAnimator.ofInt(webView, "scrollY", webView.getScrollY(), upTo);
                     anim.setDuration(1000).start();
+
                 }
-                if (y>H*(0.8)) {
+                if (y>H*(0.7)) {
 
                     bottomTo = webView.getScrollY() + 850;
                     ObjectAnimator anim = ObjectAnimator.ofInt(webView, "scrollY", webView.getScrollY(), bottomTo);
                     anim.setDuration(1000).start();
                 }
+                emotionNum = 0;
             }
         }
 
-        if(emotionNum == 1)
+        if(emotionNum == 1) {
+            touchLike();
             emotionView.setImageResource(R.drawable.happy);
+        }
         else if(emotionNum == 2)
             emotionView.setImageResource(R.drawable.surprise);
-        else if(emotionNum == 3)
+        else if(emotionNum == 3){
+            touchdisLike();
             emotionView.setImageResource(R.drawable.sad);
-        else if(emotionNum == 4)
+        }
+        else if(emotionNum == 4){
+            touchdisLike();
             emotionView.setImageResource(R.drawable.anger);
+        }
         else if(emotionNum == 5)
             emotionView.setImageResource(R.drawable.disgust);
         else if(emotionNum == 6)
@@ -249,6 +258,14 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
         super.onProgressUpdate(values);
     }
 
+    public void touchLike(){
+        EconUtils.gazeTouchMotion(webView, 143, 1070, MotionEvent.ACTION_DOWN);
+        EconUtils.gazeTouchMotion(webView, 143, 1070, MotionEvent.ACTION_UP);
+    }
+    public void touchdisLike(){
+        EconUtils.gazeTouchMotion(webView, 360, 1070, MotionEvent.ACTION_DOWN);
+        EconUtils.gazeTouchMotion(webView, 360, 1070, MotionEvent.ACTION_UP);
+    }
 
     @Override
     public void onPostExecute(Boolean aBoolean) {
