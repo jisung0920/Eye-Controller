@@ -13,6 +13,8 @@ import androidx.core.content.ContextCompat;
 
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -41,12 +43,13 @@ import POSCO_AI.e_con.threadClass.CameraProcessor;
 public class MainActivity extends AppCompatActivity{
 
     private final String startUrl = "https://www.youtube.com/";
-//    private final String startUrl = "https://music.youtube.com/";
-//    private final String startUrl = "https://m.map.naver.com/";
+    private final String instaUrl ="https://www.instagram.com/?hl=ko";
+    private final String ytmUrl = "https://music.youtube.com/";
+    private final String nmapUrl = "https://m.map.naver.com/";
     private static final int REQUEST_CAMERA = 1;
 
-    String serverIP = "192.168.24.133";
-    int serverPORT = 8100;
+    String serverIP = "192.168.1.83";
+    int serverPORT = 8200;
 
     private WebView webView;
     private ImageView gazePointer,emotionView;
@@ -77,6 +80,7 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //        ActionBar ab = getSupportActionBar() ;
         permissionValidation();
 
         DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();
@@ -302,7 +306,27 @@ public class MainActivity extends AppCompatActivity{
                 break;
         }
     }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle presses on the action bar items
+        switch (item.getItemId()) {
+            case R.id.insta_ac:
+                webView.loadUrl(instaUrl);
+                return true;
+            case R.id.ytmusic_ac:
+                webView.loadUrl(ytmUrl);
+                return true;
+            case R.id.nmap_ac:
+                webView.loadUrl(nmapUrl);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
-
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
 }

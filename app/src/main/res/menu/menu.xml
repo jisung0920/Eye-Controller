@@ -1,0 +1,17 @@
+<menu  xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/insta_ac"
+        android:icon="@drawable/insta_logo"
+        app:showAsAction="always"
+        android:title="insta" />
+    <item android:id="@+id/ytmusic_ac"
+        android:title="YTmusic"
+        android:icon="@drawable/ytm_logo"
+        app:showAsAction="ifRoom" />
+    <item android:id="@+id/nmap_ac"
+        android:title="Nmap"
+        android:icon="@drawable/n_map_icon"
+        app:showAsAction="ifRoom" />
+
+</menu>

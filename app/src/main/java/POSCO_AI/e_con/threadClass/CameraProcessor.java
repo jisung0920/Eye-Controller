@@ -45,7 +45,7 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
     private ImageView emotionView;
     private int W,H;
     private int blinkCounter = 0,scrollCounter=0;
-    private final int BLINK_TH = 3,SCROLL_TH=3;
+    private final int BLINK_TH = 5,SCROLL_TH=5;
 
 
     public CameraProcessor(View gazePointer,String IP,int PORT, WebView webView,ImageView emotionView,int W, int H) {
@@ -223,7 +223,7 @@ public class CameraProcessor extends AsyncTask<String, String, Boolean> implemen
                     anim.setDuration(1000).start();
 
                 }
-                if (y>H*(0.7)) {
+                if (y>H*(0.8)) {
 
                     bottomTo = webView.getScrollY() + 850;
                     ObjectAnimator anim = ObjectAnimator.ofInt(webView, "scrollY", webView.getScrollY(), bottomTo);
